@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from MaltegoTransform import *
 from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
 import sys, string
 
 # Description:  Locally extract words from Tweets
@@ -9,8 +10,9 @@ import sys, string
 # Author:       Michael Henriksen (@michenriksen)
 
 def normalizeWord(word):
-	word = word.strip().lower().decode('unicode_escape').encode('ascii','ignore')
-	return ''.join(ch for ch in word if ch not in string.punctuation)
+  stemmer = SnowballStemmer("english")
+  word    = word.strip().lower().decode('unicode_escape').encode('ascii','ignore')
+  return stemmer.stem(''.join(ch for ch in word if ch not in string.punctuation))
 
 transform = MaltegoTransform()
 transform.parseArguments(sys.argv)
