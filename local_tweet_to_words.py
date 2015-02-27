@@ -9,25 +9,38 @@ import sys, string
 # Installation: http://dev.paterva.com/developer/getting_started/building_your_own_local_transform.php
 # Author:       Michael Henriksen (@michenriksen)
 
-def normalizeWord(word):
-  stemmer = SnowballStemmer("english")
-  word    = word.strip().lower().decode('unicode_escape').encode('ascii','ignore')
-  return stemmer.stem(''.join(ch for ch in word if ch not in string.punctuation))
-
 transform = MaltegoTransform()
 transform.parseArguments(sys.argv)
 
 tweet      = transform.getVar("content")
+stemmer    = SnowballStemmer("english")
 stop_words = stopwords.words("english")
+with open("top100Kenglishwords.txt") as f:
+    common_words = [x.strip().strip().lower().decode("unicode_escape").encode("ascii", "ignore") for x in f.readlines()]
 words      = []
 
 for word in tweet.split():
-	if word.startswith('#') or word.startswith('@') or word.startswith('\\'):
-		continue
+    if word.startswith('#') or word.startswith('@') or word.startswith('\\'):
+	continue
 
-	word = normalizeWord(word)
-	if word != '' and word != 'rt' and not word.startswith('http') and word not in stop_words:
-		words.append(word)
+    # Normalize word and strip out silliness
+    word = word.strip().lower().decode("unicode_escape").encode("ascii", "ignore")
+    word = ''.join(ch for ch in word if ch not in string.punctuation)
+
+    if word == '' or word == 'rt' or word.startswith('http'):
+        continue
+
+    # Ignore stop-words and common words
+    if word in stop_words or word in common_words:
+        continue
+
+    word = stemmer.stem(word)
+
+    # Check word again after stemming
+    if word in stop_words or word in common_words:
+        continue
+
+    words.append(word)
 
 for word in words:
 	transform.addEntity("maltego.Phrase", word)
